@@ -1,156 +1,248 @@
 # Hermes-Kronos - 智能金融预测系统
 
-融合 Hermes Agent（自进化智能体）与 Kronos 模型（金融 K 线基础模型）的端到端智能金融预测系统。
+基于 **Hermes Agent**（NousResearch 自进化智能体）与 **Kronos 模型**（金融 K 线基础模型）的端到端智能金融预测系统。
 
-## 项目概述
+## 🎯 核心特性
 
-本项目提供以下功能：
-- **自然语言预测**: 用户通过文本输入预测需求
+- **真正的 Hermes Agent 集成**: 使用 NousResearch 的 Hermes-agent 框架
+- **自然语言预测**: 通过对话描述需求，Agent 自动调用 Kronos 模型
 - **多资产支持**: A股、美股、加密货币
-- **K线可视化**: 历史数据与预测结果的图表展示
-- **批量预测**: 支持多资产并行预测
-- **定时任务**: 基于 Cron 的预测任务调度
+- **自进化学习**: Hermes Agent 的技能自动学习与持久记忆
+- **K线可视化**: 预测结果叠加置信区间
+- **批量预测**: 多资产并行分析
+- **定时任务**: Cron 驱动的自动化预测
 
-## 项目结构
+## 🏗️ 系统架构
+
+```
+┌─────────────────────────────────────────────┐
+│            React Frontend (Port 3000)       │
+│   ┌─────────────────────────────────────┐   │
+│   │  - Login/Register                    │   │
+│   │  - Chat Interface                   │   │
+│   │  - K-line Visualization             │   │
+│   └─────────────────────────────────────┘   │
+└────────────────────┬────────────────────────┘
+                     │ HTTP/WebSocket
+┌────────────────────▼────────────────────────┐
+│     FastAPI Backend Gateway (Port 8000)      │
+│   ┌─────────────────────────────────────┐   │
+│   │  - JWT Authentication              │   │
+│   │  - Hermes AIAgent Integration      │   │
+│   │  - API Routes                      │   │
+│   │  - Kronos Tools (Hermes-style)     │   │
+│   └─────────────────────────────────────┘   │
+└────┬──────────────────────┬─────────────────┘
+     │                      │
+┌────▼────────┐     ┌──────▼──────────┐
+│  Kronos     │     │   Hermes AIAgent │
+│  Service    │◄───│   (Real Framework)│
+│  (Port 8001)│     │                  │
+└─────────────┘     └──────────────────┘
+     │
+┌────▼─────────────┐
+│  Data Sources    │
+│  - AkShare       │
+│  - YFinance      │
+│  - CCXT          │
+└──────────────────┘
+```
+
+## 🧠 Hermes Agent 集成
+
+本项目使用真正的 **Hermes-agent** 框架（ NousResearch 开源），而非简化实现。
+
+### 核心优势
+
+1. **AIAgent 类**: 完整的对话循环实现
+2. **工具调用**: 遵循 Hermes 的工具注册模式
+3. **自进化能力**: 技能自动学习、持久记忆
+4. **子 Agent 委派**: 并行处理复杂任务
+5. **定时任务**: Cron 驱动的自动化
+
+### Kronos 工具注册
+
+遵循 Hermes 的 `tools/registry.py` 模式：
+
+```python
+registry.register(
+    name="kronos_predict",
+    toolset="kronos",
+    schema={...},
+    handler=kronos_predict_tool,
+    check_fn=check_kronos_requirements,
+    requires_env=[],
+)
+```
+
+### 配置模型
+
+编辑 `backend/.env`:
+
+```bash
+HERMES_PROVIDER=openrouter
+HERMES_MODEL=anthropic/claude-3.5-sonnet
+OPENAI_API_KEY=your-key
+```
+
+## 📁 项目结构
 
 ```
 kronos-agent/
-├── frontend/          # 前端代码 (待开发)
-├── backend/           # 后端 API 网关 (待开发)
-├── kronos/            # Kronos 预测服务
+├── frontend/              # React 前端
+│   ├── src/
+│   │   ├── pages/        # Login, Home
+│   │   ├── services/     # API 客户端
+│   │   └── store/        # Zustand 状态
+├── backend/              # FastAPI 后端
 │   ├── app/
-│   │   ├── api/      # API 路由
-│   │   ├── models/   # 数据模型
-│   │   ├── services/ # 业务逻辑
-│   │   └── config.py # 配置
-│   ├── tests/        # 测试
-│   ├── Dockerfile
+│   │   ├── api/v1/      # API 路由
+│   │   ├── core/        # 配置、安全
+│   │   ├── models/      # Pydantic 模型
+│   │   ├── services/    # Agent 服务
+│   │   └── tools/       # Hermes 工具
 │   └── requirements.txt
-├── docs/              # 文档
-├── scripts/           # 辅助脚本
-├── .trae/            # Trae 规范文档
-│   └── specs/
-│       ├── spec.md
-│       ├── tasks.md
-│       └── checklist.md
-├── docker-compose.yml # Docker Compose 配置
+├── kronos/               # Kronos 预测服务
+│   ├── app/
+│   │   ├── api/v1/      # 预测 API
+│   │   ├── models/      # 数据模型
+│   │   └── services/    # 数据获取、预测
+│   └── requirements.txt
+├── docker-compose.yml     # 容器编排
 └── README.md
 ```
 
-## 技术栈
+## 🚀 快速开始
 
-### Kronos 预测服务
-- **FastAPI**: Web 框架
-- **PyTorch**: 深度学习框架（预留，当前为简化版）
-- **Pandas/Numpy**: 数据处理
-- **AkShare**: A股数据
-- **yfinance**: 美股数据
-- **ccxt**: 加密货币数据
+### 1. 克隆项目
 
-### 基础设施
-- **PostgreSQL/TimescaleDB**: 时序数据库
-- **Redis**: 缓存
-- **MinIO**: 对象存储
-- **Docker Compose**: 容器编排
+```bash
+git clone https://github.com/kunden0612/kronos-agent.git
+cd kronos-agent
+git checkout dev-2026-04-30
+```
 
-## 快速开始
+### 2. 配置环境
 
-### 环境要求
+```bash
+cp backend/.env.example backend/.env
+# 编辑 backend/.env，配置您的 API keys
+```
 
-- Docker
-- Docker Compose
-
-### 启动服务
+### 3. 启动服务
 
 ```bash
 docker compose up -d --build
 ```
 
-这将启动以下服务：
+### 4. 访问应用
 
-- **PostgreSQL/TimescaleDB**: 端口 5432
-- **Redis**: 端口 6379
-- **MinIO**: 端口 9000 (API) 和 9001 (控制台)
-- **Kronos Service**: 端口 8001
+- 前端界面: http://localhost:3000
+- 后端 API 文档: http://localhost:8000/docs
+- Kronos 服务: http://localhost:8001/docs
 
-### 服务访问
+## 💬 使用示例
 
-- **Backend API 文档**: http://localhost:8000/docs
-- **Kronos API 文档**: http://localhost:8001/docs
-- **MinIO 控制台**: http://localhost:9001 (默认凭据: minioadmin / minioadmin)
-- **PostgreSQL**: localhost:5432 (默认凭据: kronos / kronos)
-- **Redis**: localhost:6379
+注册并登录后，尝试以下对话：
 
-### API 测试
+```
+用户: 预测茅台未来5天的走势
+Hermes: 正在调用 kronos_predict 工具...
 
-#### Backend API（推荐使用）
-1. 访问 Swagger UI: http://localhost:8000/docs
-2. 测试聊天: POST `/api/v1/chat`
+[图表显示预测结果]
 
-示例聊天请求：
-```json
-{
-  "message": "预测茅台未来5天的走势"
-}
+预测解读：茅台股价未来5个交易日预计呈温和上涨趋势，
+平均波动率约为2.5%，建议关注成交量变化。
+
+⚠️ 风险提示：模型基于历史数据与机器学习生成，
+不构成投资建议。市场有风险，投资需谨慎。
 ```
 
-#### Kronos API（直接调用）
-1. 访问 Swagger UI: http://localhost:8001/docs
-2. 测试健康检查: GET `/api/v1/health`
-3. 测试预测: POST `/api/v1/predict`
+## 🔧 开发
 
-示例预测请求：
-```json
-{
-  "symbol": "AAPL",
-  "pred_len": 5,
-  "lookback": 100
-}
+### 本地运行后端
+
+```bash
+cd backend
+pip install -r requirements.txt
+uvicorn app.main:app --reload --port 8000
 ```
-
-## 开发指南
 
 ### 本地运行 Kronos 服务
 
 ```bash
 cd kronos
 pip install -r requirements.txt
-python -m uvicorn app.main:app --reload --host 0.0.0.0 --port 8001
+uvicorn app.main:app --reload --port 8001
 ```
 
-### 运行测试
+### 本地运行前端
 
 ```bash
-cd kronos
-python tests/test_basic.py
+cd frontend
+npm install
+npm run dev
 ```
 
-## API 接口
+## 📋 API 接口
 
-### 预测相关
-- `POST /api/v1/predict` - 单资产预测
+### 聊天接口
+- `POST /api/v1/chat` - Hermes Agent 对话
+- `POST /api/v1/chat/conversation` - 完整对话流程
+
+### 预测接口
+- `POST /api/v1/predict` - 直接调用 Kronos 预测
 - `POST /api/v1/predict/batch` - 批量预测
-- `GET /api/v1/models` - 查看已加载模型
-- `POST /api/v1/models/load` - 加载模型
-- `POST /api/v1/models/unload` - 卸载模型
 
-### 系统相关
-- `GET /api/v1/health` - 健康检查
-- `GET /` - 服务信息
+### Agent 接口
+- `GET /api/v1/agent/capabilities` - 获取 Agent 能力
+- `POST /api/v1/agent/initialize` - 初始化 Agent
 
-## 免责声明
+### 认证接口
+- `POST /api/v1/register` - 用户注册
+- `POST /api/v1/login` - 用户登录
+- `GET /api/v1/users/me` - 获取当前用户
 
-⚠️ **重要提示**: 本系统提供的预测结果基于历史数据与机器学习模型生成，**不构成任何投资建议**。金融市场有风险，投资需谨慎。用户应独立判断并承担投资风险。
+## 🛠️ 技术栈
 
-## 开发进度
+### 后端
+- **Hermes-agent**: NousResearch 自进化智能体框架
+- **FastAPI**: 现代 Python Web 框架
+- **Pydantic**: 数据验证
 
-- ✅ Task 1: 项目脚手架与基础设施搭建
-- ✅ Task 2: Kronos 预测服务核心实现
-- ✅ Task 3: 简化版 Hermes Agent 与 Tool Calling
-- ✅ Task 4: API 网关与身份认证
-- ✅ Task 5-6: 前端基础框架与路由 / K 线图与预测可视化
-- 🔄 Task 7-15: 对话界面 / 数据持久化 / 批量预测 / 定时任务 / 高级功能 / 预测技能自学习 / 管理端基础功能 / 测试文档部署优化
+### 前端
+- **React 18**: 用户界面
+- **TypeScript**: 类型安全
+- **Ant Design**: UI 组件库
+- **ECharts**: 数据可视化
+- **Zustand**: 状态管理
 
-## License
+### 预测服务
+- **PyTorch**: 深度学习（预留）
+- **AkShare**: A股数据
+- **YFinance**: 美股数据
+- **CCXT**: 加密货币
 
-MIT
+### 基础设施
+- **Docker Compose**: 容器编排
+- **PostgreSQL/TimescaleDB**: 数据库
+- **Redis**: 缓存
+- **MinIO**: 对象存储
+
+## ⚠️ 免责声明
+
+**重要提示**: 本系统提供的预测结果基于历史数据与机器学习模型生成，**不构成任何投资建议**。金融市场有风险，投资需谨慎。用户应独立判断并承担投资风险。
+
+## 📚 文档
+
+- [Hermes Agent 官方文档](https://hermes-agent.nousresearch.com/docs/)
+- [Kronos 模型 GitHub](https://github.com/shiyu-coder/Kronos)
+- [API 文档](http://localhost:8000/docs)（启动后访问）
+
+## 🤝 贡献
+
+欢迎提交 Issue 和 Pull Request！
+
+## 📄 License
+
+MIT License
