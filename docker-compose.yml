@@ -69,6 +69,24 @@ services:
       retries: 5
       start_period: 30s
 
+  hermes-agent:
+    image: python:3.11-slim
+    container_name: hermes-agent
+    command: /bin/bash -c "cd /app && pip install -e . && sleep infinity"
+    volumes:
+      - /workspace/hermes-agent:/app
+      - hermes_home:/root/.hermes
+    environment:
+      - HERMES_HOME=/root/.hermes
+    depends_on:
+      - redis
+    healthcheck:
+      test: ["CMD", "python", "-c", "from run_agent import AIAgent; print('Hermes Agent OK')"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 60s
+
   backend:
     build:
       context: ./backend
@@ -80,10 +98,19 @@ services:
       - kronos
       - redis
       - postgres
+      - hermes-agent
     environment:
       - KRONOS_SERVICE_URL=http://kronos:8001
       - POSTGRES_SERVER=postgres
       - REDIS_HOST=redis
+      - HERMES_AGENT_PATH=/app/hermes-agent
+      - HERMES_PROVIDER=openrouter
+      - HERMES_MODEL=anthropic/claude-3.5-sonnet
+      - OPENROUTER_API_KEY=${OPENROUTER_API_KEY}
+      - ANTHROPIC_API_KEY=${ANTHROPIC_API_KEY}
+      - OPENAI_API_KEY=${OPENAI_API_KEY}
+    volumes:
+      - /workspace/hermes-agent:/app/hermes-agent
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost:8000/health"]
       interval: 10s
@@ -105,3 +132,4 @@ volumes:
   postgres_data:
   redis_data:
   minio_data:
+  hermes_home:

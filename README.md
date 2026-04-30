@@ -4,65 +4,73 @@
 
 ## 🎯 核心特性
 
-- **真正的 Hermes Agent 集成**: 使用 NousResearch 的 Hermes-agent 框架
+- **真正的 Hermes Agent 集成**: 使用 NousResearch 的 Hermes-agent 框架完整能力
 - **自然语言预测**: 通过对话描述需求，Agent 自动调用 Kronos 模型
 - **多资产支持**: A股、美股、加密货币
 - **自进化学习**: Hermes Agent 的技能自动学习与持久记忆
 - **K线可视化**: 预测结果叠加置信区间
 - **批量预测**: 多资产并行分析
 - **定时任务**: Cron 驱动的自动化预测
+- **完整工具调用**: 继承 Hermes 的全部工具能力
 
 ## 🏗️ 系统架构
 
 ```
-┌─────────────────────────────────────────────┐
-│            React Frontend (Port 3000)       │
-│   ┌─────────────────────────────────────┐   │
-│   │  - Login/Register                    │   │
-│   │  - Chat Interface                   │   │
-│   │  - K-line Visualization             │   │
-│   └─────────────────────────────────────┘   │
-└────────────────────┬────────────────────────┘
-                     │ HTTP/WebSocket
-┌────────────────────▼────────────────────────┐
-│     FastAPI Backend Gateway (Port 8000)      │
-│   ┌─────────────────────────────────────┐   │
-│   │  - JWT Authentication              │   │
-│   │  - Hermes AIAgent Integration      │   │
-│   │  - API Routes                      │   │
-│   │  - Kronos Tools (Hermes-style)     │   │
-│   └─────────────────────────────────────┘   │
-└────┬──────────────────────┬─────────────────┘
+┌─────────────────────────────────────────────────────────────────────┐
+│                    React Frontend (Port 3000)                      │
+│   ┌─────────────────────────────────────────────────────────────┐   │
+│   │  - Login/Register                                        │   │
+│   │  - Chat Interface                                        │   │
+│   │  - K-line Visualization                                  │   │
+│   │  - WebSocket Streaming                                   │   │
+│   └─────────────────────────────────────────────────────────────┘   │
+└──────────────────────────┬────────────────────────────────────────┘
+                           │ HTTP/WebSocket
+┌──────────────────────────▼────────────────────────────────────────┐
+│              FastAPI Backend Gateway (Port 8000)                 │
+│   ┌─────────────────────────────────────────────────────────────┐   │
+│   │  - JWT Authentication                                      │   │
+│   │  - Hermes AIAgent Integration                             │   │
+│   │  - Kronos Tools Registration                              │   │
+│   │  - Session Management                                     │   │
+│   │  - Streaming Responses                                    │   │
+│   └─────────────────────────────────────────────────────────────┘   │
+└────┬──────────────────────┬───────────────────────────────────────┘
      │                      │
-┌────▼────────┐     ┌──────▼──────────┐
-│  Kronos     │     │   Hermes AIAgent │
-│  Service    │◄───│   (Real Framework)│
-│  (Port 8001)│     │                  │
-└─────────────┘     └──────────────────┘
-     │
-┌────▼─────────────┐
-│  Data Sources    │
-│  - AkShare       │
-│  - YFinance      │
+┌────▼────────┐     ┌──────▼──────────────────────────────┐
+│  Kronos     │     │         Hermes Agent Container     │
+│  Service    │◄───│  - AIAgent with full capabilities   │
+│  (Port 8001)│     │  - Tool calling loop              │
+└─────────────┘     │  - Memory management              │
+     │              │  - Context compression            │
+┌────▼─────────────┐│  - Subagent delegation           │
+│  Data Sources    ││  - Skill learning                │
+│  - AkShare       ││  - Session DB                    │
+│  - YFinance      │└──────────────────────────────────┘
 │  - CCXT          │
 └──────────────────┘
 ```
 
-## 🧠 Hermes Agent 集成
+## 🧠 Hermes Agent 完整集成
 
-本项目使用真正的 **Hermes-agent** 框架（ NousResearch 开源），而非简化实现。
+本项目使用真正的 **Hermes-agent** 框架（NousResearch 开源），继承其全部核心能力。
 
-### 核心优势
+### 核心能力
 
-1. **AIAgent 类**: 完整的对话循环实现
-2. **工具调用**: 遵循 Hermes 的工具注册模式
-3. **自进化能力**: 技能自动学习、持久记忆
-4. **子 Agent 委派**: 并行处理复杂任务
-5. **定时任务**: Cron 驱动的自动化
+| 能力 | 描述 |
+|------|------|
+| **AIAgent** | 完整的对话循环实现 |
+| **Tool Calling** | 自动工具调用与结果整合 |
+| **持久记忆** | 跨会话记忆管理 |
+| **技能学习** | 自动技能创建与改进 |
+| **子 Agent 委派** | 并行处理复杂任务 |
+| **定时任务** | Cron 驱动的自动化 |
+| **上下文压缩** | 智能上下文管理 |
+| **流式响应** | Token-by-token 流式输出 |
 
 ### Kronos 工具注册
 
-遵循 Hermes 的 `tools/registry.py` 模式：
+遵循 Hermes 的 `tools/registry.py` 模式注册自定义工具：
 
 ```python
 registry.register(
@@ -82,7 +90,7 @@ registry.register(
 ```bash
 HERMES_PROVIDER=openrouter
 HERMES_MODEL=anthropic/claude-3.5-sonnet
-OPENAI_API_KEY=your-key
+OPENROUTER_API_KEY=your-key
 ```
 
 ## 📁 项目结构
@@ -99,8 +107,9 @@ kronos-agent/
 │   │   ├── api/v1/      # API 路由
 │   │   ├── core/        # 配置、安全
 │   │   ├── models/      # Pydantic 模型
-│   │   ├── services/    # Agent 服务
-│   │   └── tools/       # Hermes 工具
+│   │   ├── services/    # Hermes Agent 服务
+│   │   │   └── hermes_agent_service.py  # 完整 Hermes 集成
+│   │   └── tools/       # Kronos 工具
 │   └── requirements.txt
 ├── kronos/               # Kronos 预测服务
 │   ├── app/
@@ -165,6 +174,7 @@ Hermes: 正在调用 kronos_predict 工具...
 ```bash
 cd backend
 pip install -r requirements.txt
+export HERMES_AGENT_PATH=/workspace/hermes-agent
 uvicorn app.main:app --reload --port 8000
 ```
 
@@ -187,21 +197,34 @@ npm run dev
 ## 📋 API 接口
 
 ### 聊天接口
-- `POST /api/v1/chat` - Hermes Agent 对话
-- `POST /api/v1/chat/conversation` - 完整对话流程
+| 端点 | 方法 | 描述 |
+|------|------|------|
+| `/api/v1/chat` | POST | Hermes Agent 对话 |
+| `/api/v1/chat/conversation` | POST | 完整对话流程 |
+| `/api/v1/chat/stream` | WebSocket | 流式响应 |
+
+### Agent 管理
+| 端点 | 方法 | 描述 |
+|------|------|------|
+| `/api/v1/agent/initialize` | POST | 初始化 Agent |
+| `/api/v1/agent/capabilities` | GET | 获取能力信息 |
+| `/api/v1/agent/tools` | GET | 获取工具列表 |
+| `/api/v1/agent/tools/{tool_name}` | POST | 直接调用工具 |
+| `/api/v1/agent/session` | POST | 创建会话 |
+| `/api/v1/agent/session/{id}` | GET/DELETE | 获取/删除会话 |
 
 ### 预测接口
-- `POST /api/v1/predict` - 直接调用 Kronos 预测
-- `POST /api/v1/predict/batch` - 批量预测
-
-### Agent 接口
-- `GET /api/v1/agent/capabilities` - 获取 Agent 能力
-- `POST /api/v1/agent/initialize` - 初始化 Agent
+| 端点 | 方法 | 描述 |
+|------|------|------|
+| `/api/v1/predict` | POST | 直接调用 Kronos 预测 |
+| `/api/v1/predict/batch` | POST | 批量预测 |
 
 ### 认证接口
-- `POST /api/v1/register` - 用户注册
-- `POST /api/v1/login` - 用户登录
-- `GET /api/v1/users/me` - 获取当前用户
+| 端点 | 方法 | 描述 |
+|------|------|------|
+| `/api/v1/register` | POST | 用户注册 |
+| `/api/v1/login` | POST | 用户登录 |
+| `/api/v1/users/me` | GET | 获取当前用户 |
 
 ## 🛠️ 技术栈
 
